@@ -31,14 +31,9 @@ $report_path = $report_directory.$report_filename;
 $parameters = [
     'type:issue created:'.$start_date_formatted.'..'.$end_date_formatted.' sort:created-desc repo:prestashop/prestashop'
 ];
-//$issues = $paginator->fetchAll($client->api('search'), 'issues', $parameters);
+$issues = $paginator->fetchAll($client->api('search'), 'issues', $parameters);
 
-$filename = 'result.json';
-$f = fopen($filename, 'r');
-
-$issues = json_decode(fread($f, filesize($filename)), TRUE);
-
-echo "Found " . count($issues) . " issues" . PHP_EOL;
+echo "Found " . count($issues) . " issues !" . PHP_EOL;
 
 $results = [
     'open' => 0,
@@ -96,40 +91,42 @@ foreach($duplicates as $duplicate) {
                 $original_issues[$original_issue_number] = $original_issue;
             }
             $original_issues[$original_issue_number]['duplicates'][] = $duplicate;
+            //no need to continue looking into comments
             break;
         }
     }
 }
 $results['duplicates'] = $original_issues;
 
-echo "Open : ".$results['open'].PHP_EOL;
-echo "Closed : ".$results['closed'].PHP_EOL;
-echo "Duplicates : ".count($results['duplicates']).PHP_EOL;
-echo "Regressions : ".count($results['regressions']).PHP_EOL;
-echo "    Dont regressions TE : ".$results['regressions_TE'].PHP_EOL;
+echo "Writing report...".PHP_EOL;
 
 $template_content = file_get_contents('template.md');
 $replacement_data = [
     'start-date' => $start_date_formatted,
     'end-date' => $end_date_formatted,
-    'period' => ceil(($end_date - $start_date)/(24*3600)).' days',
+    'period' => ceil(($end_date - $start_date)/(24*3600))+1,
     'issues-created' => count($issues),
     'issues-open' => $results['open'],
     'issues-closed' => $results['closed'],
     'issues-duplicates' => count($results['duplicates']),
-    'issues-duplicates-percentage' => round((count($results['duplicates']) / count($issues) * 100), 2),
+    'issues-duplicates-percentage' => round((count($results['duplicates']) / count($issues) * 100), 1),
     'issues-regressions' => count($results['regressions']),
-    'issues-regressions-percentage' => round((count($results['regressions']) / count($issues) * 100), 2),
+    'issues-regressions-percentage' => round((count($results['regressions']) / count($issues) * 100), 1),
     'issues-detected-by-te' => $results['regressions_TE'],
-    'issues-detected-by-te-percentage' => round(($results['regressions_TE'] / count($issues) * 100), 2),
+    'issues-detected-by-te-percentage' => round(($results['regressions_TE'] / count($issues) * 100), 1),
+    'creation-date' => date('Y-m-d H:i')
 ];
 $duplicate_table = '';
-foreach($results['duplicates'] as $source) {
+foreach($results['duplicates'] as $origin) {
     $priority = '-';
     $bo_fo = '-';
-    foreach($source['labels'] as $label) {
+    $state = '';
+    foreach($origin['labels'] as $label) {
         if (in_array($label['name'], ['Trivial', 'Minor', 'Major', 'Critical'])) {
             $priority = $label['name'];
+        }
+        if ($label['name'] == 'Improvement') {
+            $priority = 'Improvement';
         }
         if ($label['name'] == 'FO') {
             $bo_fo = 'FO';
@@ -137,17 +134,27 @@ foreach($results['duplicates'] as $source) {
         if ($label['name'] == 'BO') {
             $bo_fo = 'BO';
         }
+        if (in_array($label['name'], ['Refactoring', 'TBS', 'TBR'])) {
+            $state = $label['name'];
+        }
     }
-    foreach($source['duplicates'] as $duplicate) {
+    if ($origin['state'] == 'closed') {
+        $state = 'Closed';
+    }
+    if ($state == '') {
+        $state = '**To do**';
+    }
+    foreach($origin['duplicates'] as $duplicate) {
         $duplicate_data = [
             '['.$duplicate['number'].']('.$duplicate['html_url'].')',
-            $duplicate['title'],
+            excerpt($duplicate['title']),
+            date('Y-m-d', strtotime($duplicate['created_at'])),
             $bo_fo,
-            '['.$source['number'].']('.$source['html_url'].')',
-            $source['state'],
+            '['.$origin['number'].']('.$origin['html_url'].')',
+            $state,
             $priority,
         ];
-        $duplicate_table .= '|'.implode('|', $duplicate_data).'|'.PHP_EOL;
+        $duplicate_table .= implode('|', $duplicate_data).PHP_EOL;
     }
 }
 
@@ -160,3 +167,10 @@ foreach($replacement_data as $k => $v) {
 $handle = fopen($report_path, 'w');
 fwrite($handle, $template_content);
 echo "Report $report_filename written.".PHP_EOL;
+
+function excerpt($string, $length=50) {
+    if (mb_strlen($string) > $length) {
+        return mb_substr($string, 0, $length).'...';
+    }
+    return $string;
+}
