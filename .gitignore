@@ -1,4 +1,5 @@
 /vendor/
+reports/*.md
 .idea
 token.txt
 *.json
