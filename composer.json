@@ -1,0 +1,14 @@
+{
+    "name": "sgarny/regressions-report",
+    "type": "project",
+    "require": {
+        "knplabs/github-api": "^2.14",
+        "php-http/guzzle6-adapter": "^2.0"
+    },
+    "authors": [
+        {
+            "name": "Simon Garny",
+            "email": "simon.garny@prestashop.com"
+        }
+    ]
+}
