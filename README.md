@@ -28,7 +28,8 @@ Launch the script by using this command :
 START_DATE=2020-05-01 END_DATE=2020-05-29 php generate.php
 ```
 
-The final report is created in the `/reports/` folder. It uses the `template.md` file. You can modify it. 
+The final report is created in the `/reports/` folder. It uses the `template.md` file (you can modify it). 
+
 Here are the main variables:
 
 | Variable | Description |
