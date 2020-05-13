@@ -31,6 +31,9 @@ if (getenv('END_DATE') === false) {
     echo "Notice: END_DATE var not found, calculating to " . date('Y-m-d', $end_date) . PHP_EOL;
 } else {
     $end_date = strtotime(getenv('END_DATE'));
+    if (date('Y-m-d', $end_date) != getenv('END_DATE')) {
+        throw new Exception("Unrecognizable END_DATE format : ".getenv('END_DATE').PHP_EOL);
+    }
 }
 $start_date_formatted = date('Y-m-d', $start_date);
 $end_date_formatted = date('Y-m-d', $end_date);
