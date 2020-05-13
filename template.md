@@ -8,7 +8,7 @@
 
 ## Duplicate issues
 
-| # | Title | Opened | BO/FO | Duplicate of | Origin status | Origin priority |
+| # | Title | Created | BO/FO | Duplicate of | Origin status | Origin priority |
 |---|-------|--------|-------|--------------|---------------|-----------------|
 %duplicate-table%
 

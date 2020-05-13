@@ -1,7 +1,19 @@
 <?php
-include("run.php");
+use Github\Client;
+use Github\ResultPager;
 
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/globals.php';
+
+if (!file_exists('token.txt')) {
+    exit("Token file not found." . PHP_EOL);
+}
+$token = file_get_contents('token.txt');
 $report_directory = __DIR__ . '/reports/';
+
+$client = new Client();
+$client->authenticate($token, null, Github\Client::AUTH_HTTP_TOKEN);
+$paginator = new ResultPager($client);
 
 if (getenv('START_DATE') === false) {
     throw new Exception("START_DATE var is mandatory.");
@@ -23,7 +35,7 @@ if (getenv('END_DATE') === false) {
 $start_date_formatted = date('Y-m-d', $start_date);
 $end_date_formatted = date('Y-m-d', $end_date);
 
-
+//report file
 $report_filename = 'Report-'.$start_date_formatted.'-'.$end_date_formatted.'.md';
 $report_path = $report_directory.$report_filename;
 
@@ -73,7 +85,7 @@ if (count($issues) > 0) {
 }
 
 //let's get all source regressions
-echo "Retrieving duplicates data...".PHP_EOL;
+echo "Retrieving duplicates original data...".PHP_EOL;
 $duplicates = $results['duplicates'];
 $pattern = '/Duplicates? of #(\d+)/i';
 $original_issues = [];
@@ -83,7 +95,7 @@ foreach($duplicates as $duplicate) {
     foreach($comments as $comment) {
         preg_match($pattern, $comment['body'], $matches);
         if (isset($matches[1])) {
-            //we got the original issue
+            //we got the original issue number
             $original_issue_number = $matches[1];
             $original_issue = $client->api('issue')->show('PrestaShop', 'PrestaShop', $original_issue_number);
 
@@ -120,7 +132,7 @@ $duplicate_table = '';
 foreach($results['duplicates'] as $origin) {
     $priority = '-';
     $bo_fo = '-';
-    $state = '';
+    $state = '-';
     foreach($origin['labels'] as $label) {
         if (in_array($label['name'], ['Trivial', 'Minor', 'Major', 'Critical'])) {
             $priority = $label['name'];
