@@ -1,4 +1,4 @@
-# Regressions report tool
+# Issues report tool
 
 This tool is used to track all issues created in the last month (4 weeks) for the 
 [PrestaShop](https://github.com/PrestaShop/PrestaShop) project. It will gather all its data from the GitHub v3 API.
