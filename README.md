@@ -22,6 +22,12 @@ You can use these environment variables:
 - `END_DATE`   : specify the end date of the timeframe. If not specified, will be calculated by adding 4 weeks 
 to `START_DATE`. 
 
+Launch the script by using this command :
+
+```php
+START_DATE=2020-05-01 END_DATE=2020-05-29 php generate.php
+```
+
 The final report is created in the `/reports/` folder. It uses the `template.md` file. You can modify it. 
 Here are the main variables:
 
@@ -40,9 +46,3 @@ Here are the main variables:
 | %issues-detected-by-te-percentage% | Number of issues detected by automated tests as a percentage (from all issues) |
 | %duplicate-table% | Table of duplicate (fields: #, title, creation date, targeting BO or FO, Original issue, Origin status, Origin priority) |
 |%creation-date% | Report creation datetime |
-
-Launch the script by using this command :
-
-```php
-START_DATE=2020-05-01 END_DATE=2020-05-29 php generate.php
-```
